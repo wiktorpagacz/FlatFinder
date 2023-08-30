@@ -9,10 +9,9 @@ import com.google.api.client.util.DateTime;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.pagacz.flatflex.application.service.GoogleSheetService;
-import com.pagacz.flatflex.application.service.OfferAggregatorService;
 import com.pagacz.flatflex.domain.model.Offer;
-import com.pagacz.flatflex.domain.utils.OfferStatus;
+import com.pagacz.flatflex.infrastructure.persistence.OfferAggregatorService;
+import com.pagacz.flatflex.infrastructure.utils.OfferStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,23 +27,23 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class GoogleSheetServiceImpl implements GoogleSheetService {
+public class GoogleSheetService {
 
-    private final Logger log = LoggerFactory.getLogger(GoogleSheetServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(GoogleSheetService.class);
     private static final String APPLICATION_NAME = "flatflex";
+    @Autowired
+    private OfferAggregatorService offerAggregatorService;
+    private final Sheets sheetsService;
     @Value("${SHEET_ID}")
     private String SPREADSHEET_ID;
     @Value("${SHEET_RANGE}")
     private String SHEET_RANGE;
-    private Sheets sheetsService;
-    @Autowired
-    private OfferAggregatorService offerAggregatorService;
 
-    public GoogleSheetServiceImpl() throws IOException, GeneralSecurityException {
+    public GoogleSheetService() throws IOException, GeneralSecurityException {
         HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
         JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
 
-        InputStream credentialsStream = GoogleSheetServiceImpl.class.getResourceAsStream("/credentials2.json");
+        InputStream credentialsStream = GoogleSheetService.class.getResourceAsStream("/credentials2.json");
         if (Objects.nonNull(credentialsStream)) {
             log.info("[GOOGLESHEET] credentialsStream loaded.");
         }
@@ -63,16 +62,19 @@ public class GoogleSheetServiceImpl implements GoogleSheetService {
         }
     }
 
-    @Override
     public void updateExistingOffers(List<Offer> offers) {
         List<Offer> updatedOffers;
         Map<String, Offer> linkOfferMap = prepareLinkOfferMap(offers);
         ValueRange existingOffersResponse = getExistingOffers();
-        if (Objects.nonNull(existingOffersResponse) && Objects.nonNull(existingOffersResponse.getValues())
-                && !existingOffersResponse.values().isEmpty()) {
+        if (offersExists(existingOffersResponse)) {
             updatedOffers = updateOffersInSheet(existingOffersResponse.getValues(), linkOfferMap);
             offers.removeAll(updatedOffers);
         }
+    }
+
+    private boolean offersExists(ValueRange existingOffersResponse) {
+        return Objects.nonNull(existingOffersResponse) && Objects.nonNull(existingOffersResponse.getValues())
+                && !existingOffersResponse.values().isEmpty();
     }
 
     private List<Offer> updateOffersInSheet(List<List<Object>> sheetRows, Map<String, Offer> linkOfferMap) {
@@ -126,13 +128,12 @@ public class GoogleSheetServiceImpl implements GoogleSheetService {
     }
 
     private ValueRange getExistingOffers() {
-        ValueRange response = null;
         try {
-            response = sheetsService.spreadsheets().values().get(SPREADSHEET_ID, SHEET_RANGE).execute();
+            return sheetsService.spreadsheets().values().get(SPREADSHEET_ID, SHEET_RANGE).execute();
         } catch (IOException e) {
             log.error("Error occurred at getting offers from spreadsheet stage", e);
+            return null;
         }
-        return response;
     }
 
     private Map<String, Offer> prepareLinkOfferMap(List<Offer> offers) {

@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -32,6 +33,9 @@ public abstract class OfferService {
 
     @Value("${scrapper.browser}")
     String browserName;
+
+    @Value("${app.environment}")
+    private String env;
 
     protected abstract String getServiceName();
 
@@ -51,13 +55,6 @@ public abstract class OfferService {
 
     protected abstract String getBaseUrl();
 
-    public List<Offer> getNewOffers() {
-        log.info("Start scrapping from %s.");
-        String pageHtml = getOffersCode();
-        log.info("Offers scrapped.");
-        return parseOffer(pageHtml);
-    }
-
     @Async
     public CompletableFuture<List<Offer>> getNewOffersAsync() {
         return CompletableFuture.supplyAsync(() -> {
@@ -71,18 +68,21 @@ public abstract class OfferService {
     private String getOffersCode() {
         String baseUrl = getBaseUrl();
         DriverFactory factory = DriverFactoryProvider.getDriverFactory(browserName);
-        WebDriver driver = factory.getDriver();
-        driver.get(baseUrl);
-        try {
-            acceptCookies(driver);
-            waitForOffersToAppear(driver);
-        } catch (TimeoutException e) {
-            log.error("Timeout exception occurred at cookies acceptance and wait for offers to appear stage", e);
-            return "";
-        } catch (Exception e) {
-            log.error("Unexpected exception - quit driver", e);
+        WebDriver driver = factory.getDriver(env);
+        if (Objects.nonNull(driver)) {
+            driver.get(baseUrl);
+            try {
+                acceptCookies(driver);
+                waitForOffersToAppear(driver);
+            } catch (TimeoutException e) {
+                log.error("Timeout exception occurred at cookies acceptance and wait for offers to appear stage", e);
+                return "";
+            } catch (Exception e) {
+                log.error("Unexpected exception - quit driver", e);
+            }
+            return getPageHtmlAndQuitDriver(driver);
         }
-        return getPageHtmlAndQuitDriver(driver);
+        return "";
     }
 
     protected String getPageHtmlAndQuitDriver(WebDriver driver) {
@@ -134,13 +134,15 @@ public abstract class OfferService {
     }
 
     private Offer prepareOfferFromElement(Element offer) {
-        String title = selectTitleText(offer);
-        Double space = selectSpace(offer);
-        Integer price = selectAndFormatPrice(offer);
-        String address = selectAndFormatAddress(offer);
-        String link = selectAndFormatLink(offer);
-        String serviceName = getServiceName();
-        return new Offer(link, title, serviceName, price, price, space, address);
+        return Offer.builder()
+                .title(selectTitleText(offer))
+                .space(selectSpace(offer))
+                .price(selectAndFormatPrice(offer))
+                .originalPrice(selectAndFormatPrice(offer))
+                .address(selectAndFormatAddress(offer))
+                .link(selectAndFormatLink(offer))
+                .source(getServiceName())
+                .build();
     }
 
     protected Elements parseHtmlAndSelectOffers(String html) {

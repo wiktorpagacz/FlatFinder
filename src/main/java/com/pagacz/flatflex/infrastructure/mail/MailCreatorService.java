@@ -1,9 +1,8 @@
 package com.pagacz.flatflex.infrastructure.mail;
 
-import com.pagacz.flatflex.application.service.MailCreatorService;
 import com.pagacz.flatflex.domain.model.Offer;
-import com.pagacz.flatflex.domain.utils.HtmlStyle;
-import com.pagacz.flatflex.domain.utils.HtmlTags;
+import com.pagacz.flatflex.infrastructure.utils.HtmlStyle;
+import com.pagacz.flatflex.infrastructure.utils.HtmlTags;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Service
-public class MailCreatorServiceImpl implements MailCreatorService {
+public class MailCreatorService {
 
     private static final String LINK_NAME = "LINK";
 
@@ -26,7 +25,6 @@ public class MailCreatorServiceImpl implements MailCreatorService {
                     "Link")
     );
 
-    @Override
     public String createMailFromOffers(List<Offer> offerList) {
         StringBuilder mailMessage = new StringBuilder();
         if (Objects.nonNull(offerList) && !offerList.isEmpty()) {
@@ -55,11 +53,11 @@ public class MailCreatorServiceImpl implements MailCreatorService {
     }
 
     private void prepareHeadColumns(StringBuilder tableBuilder) {
-        MailCreatorServiceImpl.TABLE_HEADERS.forEach(colName -> createTableColumn(tableBuilder, colName, HtmlStyle.TH));
+        MailCreatorService.TABLE_HEADERS.forEach(colName -> createTableColumn(tableBuilder, colName, HtmlStyle.TH));
     }
 
     private void createOfferRow(StringBuilder builder, Offer offer, int rowNumber) {
-        builder.append(String.format(HtmlTags.TR_STYLE.getOpenTag(), rowNumber % 2 == 0 ? HtmlStyle.TR_EVEN.style : HtmlStyle.TR_ODD.style));
+        builder.append(String.format(HtmlTags.TR_STYLE.getOpenTag(), rowNumber % 2 == 0 ? HtmlStyle.TR_EVEN.getStyle() : HtmlStyle.TR_ODD.getStyle()));
         createTableColumn(builder, String.valueOf(rowNumber), HtmlStyle.TD);
         createTableColumn(builder, String.valueOf(offer.getSource()), HtmlStyle.TD);
         createTableColumn(builder, String.valueOf(offer.getComment()), HtmlStyle.TD);
@@ -72,6 +70,6 @@ public class MailCreatorServiceImpl implements MailCreatorService {
     }
 
     private String createAnchor(String href) {
-        return String.format("<a href=\"%s\">%s</a>", href, MailCreatorServiceImpl.LINK_NAME);
+        return String.format("<a href=\"%s\">%s</a>", href, MailCreatorService.LINK_NAME);
     }
 }

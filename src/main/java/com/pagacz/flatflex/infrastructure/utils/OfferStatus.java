@@ -1,7 +1,6 @@
-package com.pagacz.flatflex.domain.utils;
+package com.pagacz.flatflex.infrastructure.utils;
 
 public enum OfferStatus {
-
     OFFER_SEND_STATUS('Y'),
     OFFER_WROTE_STATUS('Y'),
     OFFER_NOT_WROTE('N'),

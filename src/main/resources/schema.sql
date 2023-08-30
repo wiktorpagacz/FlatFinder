@@ -1,7 +1,5 @@
-create sequence IF NOT EXISTS OFFERIDSEQUENCE START 1 INCREMENT 1;
-
 create TABLE IF NOT EXISTS "offer" (
-    "id" bigint NOT NULL DEFAULT nextval('OFFERIDSEQUENCE'),
+    "id" uuid not null,
     "title" varchar(255),
     "source" varchar(255),
     "link" varchar(255),

@@ -1,18 +1,24 @@
 package com.pagacz.flatflex.domain.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Table
 @Entity(name = "offer")
-@SequenceGenerator(name = "OFFERIDSEQUENCE", sequenceName = "OFFERIDSEQUENCE", allocationSize = 1)
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Offer {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "OFFERIDSEQUENCE")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
     @Column(name = "TITLE")
     private String title;
     @Column(name = "SOURCE")
@@ -20,6 +26,7 @@ public class Offer {
     @Column(name = "LINK")
     private String link;
     @Column(name = "COMMENT")
+    @Builder.Default
     private String comment = "";
     @Column(name = "PRICE")
     private Integer price;
@@ -38,16 +45,15 @@ public class Offer {
     @UpdateTimestamp
     private LocalDateTime lastModifiedTime;
     @Column(name = "WRITE_TO_DOCS")
+    @Builder.Default
     private Character writeToDocs = 'N';
     @Column(name = "SEND_BY_EMAIL")
+    @Builder.Default
     private Character sendByEmail = 'N';
     @Column(name = "WRITE_TO_DOCS_TIME")
     private LocalDateTime writeToDocsTime;
     @Column(name = "SEND_BY_EMAIL_TIME")
     private LocalDateTime sendByEmailTime;
-
-    public Offer() {
-    }
 
     public Offer(String link, String title, String source, Integer price, Integer originalPrice, Double space, String address) {
         this.link = link;
@@ -57,101 +63,5 @@ public class Offer {
         this.originalPrice = originalPrice;
         this.space = space;
         this.address = address;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public LocalDateTime getLastModifiedTime() {
-        return lastModifiedTime;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getLink() {
-        return link;
-    }
-
-    public void setPrice(Integer price) {
-        this.price = price;
-    }
-
-    public Integer getPrice() {
-        return price;
-    }
-
-    public Double getSpace() {
-        return space;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setInsertDate(LocalDateTime insertDate) {
-        this.insertDate = insertDate;
-    }
-
-    public LocalDateTime getInsertDate() {
-        return insertDate;
-    }
-
-    public void setLastModifiedTime(LocalDateTime lastModifiedTime) {
-        this.lastModifiedTime = lastModifiedTime;
-    }
-
-    public Character getWriteToDocs() {
-        return writeToDocs;
-    }
-
-    public void setWriteToDocs(Character writeToDocs) {
-        this.writeToDocs = writeToDocs;
-    }
-
-    public Character getSendByEmail() {
-        return sendByEmail;
-    }
-
-    public void setSendByEmail(Character sendByEmail) {
-        this.sendByEmail = sendByEmail;
-    }
-
-    public LocalDateTime getWriteToDocsTime() {
-        return writeToDocsTime;
-    }
-
-    public void setWriteToDocsTime(LocalDateTime writeToDocsTime) {
-        this.writeToDocsTime = writeToDocsTime;
-    }
-
-    public LocalDateTime getSendByEmailTime() {
-        return sendByEmailTime;
-    }
-
-    public void setSendByEmailTime(LocalDateTime sendByEmailTime) {
-        this.sendByEmailTime = sendByEmailTime;
-    }
-
-    public Integer getOriginalPrice() {
-        return originalPrice;
-    }
-
-    public void setOriginalPrice(Integer originalPrice) {
-        this.originalPrice = originalPrice;
     }
 }

@@ -1,4 +1,4 @@
-package com.pagacz.flatflex.domain.utils;
+package com.pagacz.flatflex.infrastructure.utils;
 
 public enum HtmlTags {
     TD_STYLE("<td style=\"%s\">", "</td>"),

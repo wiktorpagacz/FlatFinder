@@ -3,7 +3,7 @@ package com.pagacz.flatflex.infrastructure.persistence;
 import com.pagacz.flatflex.application.service.*;
 import com.pagacz.flatflex.domain.model.Offer;
 import com.pagacz.flatflex.domain.repository.OfferRepository;
-import com.pagacz.flatflex.domain.utils.OfferStatus;
+import com.pagacz.flatflex.infrastructure.utils.OfferStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,16 +17,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class OfferAggregatorServiceImpl implements OfferAggregatorService {
+public class OfferAggregatorService {
 
-    private final Logger log = LoggerFactory.getLogger(OfferAggregatorServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(OfferAggregatorService.class);
 
     @Autowired
     private OfferRepository offerRepository;
     @Autowired
     private List<OfferService> offerServices;
 
-    @Override
     public void aggregateNewOffers() {
         List<Offer> aggregatedOffers = new ArrayList<>();
         try {
@@ -42,7 +41,6 @@ public class OfferAggregatorServiceImpl implements OfferAggregatorService {
 
     }
 
-    @Override
     public List<Offer> getNotWroteOffers() {
         return offerRepository.getNotWroteOffers(OfferStatus.OFFER_NOT_WROTE.getStatus());
     }
@@ -51,17 +49,14 @@ public class OfferAggregatorServiceImpl implements OfferAggregatorService {
         offerRepository.updateErrorSendOffersToNotSend(OfferStatus.OFFER_NOT_SEND.getStatus(), OfferStatus.OFFER_SEND_ERROR.getStatus());
     }
 
-    @Override
     public void updateErrorWroteOffers() {
         offerRepository.updateErrorWriteToNotWrote(OfferStatus.OFFER_WRITE_ERROR.getStatus(), OfferStatus.OFFER_NOT_WROTE.getStatus());
     }
 
-    @Override
     public List<Offer> getLastWroteOffers(int limit) {
         return offerRepository.getLastWroteOffers(limit, OfferStatus.OFFER_WROTE_STATUS.getStatus());
     }
 
-    @Override
     public List<Offer> getOffersToSend() {
         return offerRepository.getOffersBySendByEmailStatus(OfferStatus.OFFER_NOT_SEND.getStatus());
     }
@@ -85,17 +80,23 @@ public class OfferAggregatorServiceImpl implements OfferAggregatorService {
         });
     }
 
-    @Override
     public void markOfferSendAsError(List<Offer> offersToSend) {
         offersToSend.forEach(o -> o.setSendByEmail(OfferStatus.OFFER_SEND_ERROR.getStatus()));
         offerRepository.saveAll(offersToSend);
     }
 
-    @Override
     public void markOfferSendAsSuccessful(List<Offer> offersToSend, LocalDateTime sendTime) {
         offersToSend.forEach(o -> o.setSendByEmail(OfferStatus.OFFER_SEND_STATUS.getStatus()));
         offersToSend.forEach(o -> o.setSendByEmailTime(sendTime));
         offerRepository.saveAll(offersToSend);
+    }
+
+    public void saveOffers(List<Offer> updatedOffers) {
+        offerRepository.saveAll(updatedOffers);
+    }
+
+    public void saveOffer(Offer offer) {
+        offerRepository.save(offer);
     }
 
     private List<Offer> prepareDistinctOffers(List<Offer> scrappedOffers) {
@@ -131,15 +132,5 @@ public class OfferAggregatorServiceImpl implements OfferAggregatorService {
     private void updateOfferPriceComment(Offer newOffer, Offer oldOffer) {
         oldOffer.setComment("Nowa cena! Stara: " + oldOffer.getPrice() + " z dnia " + oldOffer.getInsertDate());
         oldOffer.setPrice(newOffer.getPrice());
-    }
-
-    @Override
-    public void saveOffers(List<Offer> updatedOffers) {
-        offerRepository.saveAll(updatedOffers);
-    }
-
-    @Override
-    public void saveOffer(Offer offer) {
-        offerRepository.save(offer);
     }
 }

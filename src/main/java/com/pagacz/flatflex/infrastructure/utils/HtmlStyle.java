@@ -1,4 +1,4 @@
-package com.pagacz.flatflex.domain.utils;
+package com.pagacz.flatflex.infrastructure.utils;
 
 public enum HtmlStyle {
     TABLE("border-collapse: collapse; font-family: Tahoma, Geneva, sans-serif;"),
@@ -7,7 +7,7 @@ public enum HtmlStyle {
     TR_EVEN("background-color: #f9fafb;"),
     TD("color: #636363; border: 1px solid #dddfe1; padding: 15px;");
 
-    public final String style;
+    private final String style;
 
     HtmlStyle(String style) {
         this.style = style;

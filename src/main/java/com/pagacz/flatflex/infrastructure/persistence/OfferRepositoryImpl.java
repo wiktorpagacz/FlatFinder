@@ -2,7 +2,7 @@ package com.pagacz.flatflex.infrastructure.persistence;
 
 import com.pagacz.flatflex.domain.model.Offer;
 import com.pagacz.flatflex.domain.repository.OfferRepositoryCustom;
-import com.pagacz.flatflex.domain.utils.CommonHelper;
+import com.pagacz.flatflex.infrastructure.utils.CommonHelper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;

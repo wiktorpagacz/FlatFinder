@@ -13,7 +13,7 @@ public class ChromeBrowser implements DriverFactory {
     private final Logger log = LoggerFactory.getLogger(ChromeBrowser.class);
 
     @Override
-    public WebDriver getDriver() {
+    public WebDriver getDriver(String env) {
         System.setProperty("webdriver.chrome.driver", "chromedriver/chromedriver");
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--remote-allow-origins=*", "ignore-certificate-errors");

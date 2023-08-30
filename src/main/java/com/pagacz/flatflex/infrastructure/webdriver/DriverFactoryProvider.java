@@ -7,7 +7,7 @@ public class DriverFactoryProvider {
     }
 
     public static DriverFactory getDriverFactory(String browserType) {
-        if (browserType.equals("chrome")) {
+        if ("chrome".equals(browserType)) {
             return new ChromeBrowser();
         } else {
             return new FirefoxBrowser();
