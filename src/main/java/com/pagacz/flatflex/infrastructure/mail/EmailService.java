@@ -16,9 +16,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
-public class EmailServiceImpl {
+public class EmailService {
 
-    private final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     @Autowired
     private EmailConfig emailConfig;
@@ -42,17 +42,17 @@ public class EmailServiceImpl {
         sendEmailNew("Nowe oferty z mieszkaniami " + dtf.format(now), email, emailRecipients, emailSender);
     }
 
+    public void prepareAndSendMailWithOffers(List<Offer> offersToSend) {
+        MailCreatorService mailCreatorService = new MailCreatorService();
+        String mailMessage = mailCreatorService.createMailFromOffers(offersToSend);
+        sendEmailWithOffers(mailMessage, emailRecipients, emailName);
+    }
+
     private void sendMail(Message message) {
         try {
             Transport.send(message);
         } catch (MessagingException e) {
             log.error("Error occurred at sending message stage", e);
         }
-    }
-
-    public void prepareAndSendMailWithOffers(List<Offer> offersToSend) {
-        MailCreatorService mailCreatorService = new MailCreatorService();
-        String mailMessage = mailCreatorService.createMailFromOffers(offersToSend);
-        sendEmailWithOffers(mailMessage, emailRecipients, emailName);
     }
 }

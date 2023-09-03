@@ -2,7 +2,7 @@ package com.pagacz.flatflex.application.scheduler;
 
 import com.pagacz.flatflex.domain.model.Offer;
 import com.pagacz.flatflex.infrastructure.gsheet.GoogleSheetService;
-import com.pagacz.flatflex.infrastructure.mail.EmailServiceImpl;
+import com.pagacz.flatflex.infrastructure.mail.EmailService;
 import com.pagacz.flatflex.infrastructure.persistence.OfferAggregatorService;
 import com.pagacz.flatflex.infrastructure.utils.CommonHelper;
 import org.slf4j.Logger;
@@ -20,12 +20,12 @@ import java.util.List;
 public class ScheduledSearches {
 
     private static final Logger log = LoggerFactory.getLogger(ScheduledSearches.class);
-    private final EmailServiceImpl emailService;
+    private final EmailService emailService;
     private final OfferAggregatorService offerAggregatorService;
     private final GoogleSheetService googleSheetService;
 
     @Autowired
-    public ScheduledSearches(EmailServiceImpl emailService, OfferAggregatorService offerAggregatorService,
+    public ScheduledSearches(EmailService emailService, OfferAggregatorService offerAggregatorService,
                              GoogleSheetService googleSheetService) {
         this.emailService = emailService;
         this.offerAggregatorService = offerAggregatorService;
