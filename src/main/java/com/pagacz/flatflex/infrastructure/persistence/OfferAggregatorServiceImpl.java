@@ -30,30 +30,26 @@ public class OfferAggregatorServiceImpl implements OfferAggregatorService {
     private final Logger log = LoggerFactory.getLogger(OfferAggregatorServiceImpl.class);
     private final RedisCacheService redisCacheService;
     private final OfferRepository offerRepository;
-    private final List<OfferScrapperService> offerScrapperServices;
     private final KafkaProducer producer;
+    private final OfferAggregatorAsync offerAggregatorAsync;
     @Value(value = "${offer.delete.threshold}")
     private int offerDeleteThreshold;
 
-
     @Autowired
     public OfferAggregatorServiceImpl(RedisCacheService redisCacheService, OfferRepository offerRepository,
-                                      List<OfferScrapperService> offerScrapperServices, KafkaProducer kafkaProducer) {
+                                      List<OfferScrapperService> offerScrapperServices, KafkaProducer kafkaProducer,
+                                      OfferAggregatorAsync offerAggregatorAsync) {
         this.redisCacheService = redisCacheService;
         this.offerRepository = offerRepository;
-        this.offerScrapperServices = offerScrapperServices;
         this.producer = kafkaProducer;
-    }
-
-    public List<OfferScrapperService> getOfferScrapperServices() {
-        return offerScrapperServices;
+        this.offerAggregatorAsync = offerAggregatorAsync;
     }
 
     @Override
     public void aggregateNewOffers() {
         List<Offer> aggregatedOffers = new ArrayList<>();
         try {
-            aggregatedOffers = aggregateOffersAsync().join();
+            aggregatedOffers = offerAggregatorAsync.aggregateOffersAsync().join();
         } catch (Exception e) {
             log.error("An asynchronous aggregating throw an exception: {}", e.getMessage());
         } finally {
@@ -77,22 +73,6 @@ public class OfferAggregatorServiceImpl implements OfferAggregatorService {
     public void clearSentOffers() {
         List<Offer> offers = offerRepository.getOffersByStatusAndDate(OfferStatus.OFFER_SEND.getStatus(), LocalDateTime.now().minusDays(offerDeleteThreshold));
         offerRepository.deleteAll(offers);
-    }
-
-    @Async
-    public CompletableFuture<List<Offer>> aggregateOffersAsync() {
-        List<CompletableFuture<List<Offer>>> asyncTasks = new ArrayList<>();
-        for (OfferScrapperService offerScrapperService : offerScrapperServices) {
-            asyncTasks.add(offerScrapperService.getNewOffersAsync());
-        }
-        CompletableFuture<Void> allOf = CompletableFuture.allOf(asyncTasks.toArray(new CompletableFuture[0]));
-        return allOf.thenApply(v -> {
-            List<Offer> newOffers = new ArrayList<>();
-            for (CompletableFuture<List<Offer>> asyncTask : asyncTasks) {
-                newOffers.addAll(asyncTask.join());
-            }
-            return newOffers;
-        });
     }
 
     private List<Offer> prepareDistinctOffers(List<Offer> scrappedOffers) {
