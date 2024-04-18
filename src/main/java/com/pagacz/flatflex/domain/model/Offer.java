@@ -6,7 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Table
 @Entity(name = "offer")
@@ -15,10 +14,11 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@SequenceGenerator(name = "OFFERIDSEQUENCE", sequenceName = "OFFERIDSEQUENCE", allocationSize = 1)
 public class Offer {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "OFFERIDSEQUENCE")
+    private Long id;
     @Column(name = "TITLE")
     private String title;
     @Column(name = "SOURCE")
@@ -44,16 +44,9 @@ public class Offer {
     @Temporal(TemporalType.TIMESTAMP)
     @UpdateTimestamp
     private LocalDateTime lastModifiedTime;
-    @Column(name = "WRITE_TO_DOCS")
+    @Column(name = "KAFKA_SEND")
     @Builder.Default
-    private Character writeToDocs = 'N';
-    @Column(name = "SEND_BY_EMAIL")
-    @Builder.Default
-    private Character sendByEmail = 'N';
-    @Column(name = "WRITE_TO_DOCS_TIME")
-    private LocalDateTime writeToDocsTime;
-    @Column(name = "SEND_BY_EMAIL_TIME")
-    private LocalDateTime sendByEmailTime;
+    private Character kafkaSend = 'N';
 
     public Offer(String link, String title, String source, Integer price, Integer originalPrice, Double space, String address) {
         this.link = link;

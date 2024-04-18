@@ -1,3 +1,38 @@
+buildscript {
+	ext {
+		avroToolsVersion = '1.9.1'
+		avroTools_log4jVersion = '2.5'
+	}
+
+	repositories {
+		mavenCentral()
+		gradlePluginPortal()
+	}
+
+	configurations.create('avrotools')
+	dependencies {
+		avrotools "org.apache.avro:avro-tools:$avroToolsVersion"
+		avrotools "org.apache.logging.log4j:log4j-1.2-api:$avroTools_log4jVersion"
+	}
+}
+
+void generateAvroFile(avscFile) {
+	javaexec {
+		classpath = buildscript.configurations.avrotools
+		main = 'org.apache.avro.tool.Main'
+		args = [
+				'compile',
+				'-encoding', 'utf8',
+				'-bigDecimal'
+		]
+		args += [
+				'schema',
+				new String("src/main/avro/${avscFile}.avsc"),
+				'src/main/java/'
+		]
+	}
+}
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.0.6'
@@ -10,30 +45,37 @@ sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+	gradlePluginPortal()
+	maven {
+		url "https://packages.confluent.io/maven"
+	}
 }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	implementation 'com.h2database:h2:2.1.214'
 	implementation 'org.springframework.boot:spring-boot-starter-web:3.1.0'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.0.6'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.0.6'
+	implementation 'org.springframework.boot:spring-boot-starter-data-couchbase:3.0.6'
+	implementation 'org.springframework.kafka:spring-kafka:3.1.1'
+
+	implementation 'com.h2database:h2:2.1.214'
 	compileOnly 'org.projectlombok:lombok:1.18.28'
 	annotationProcessor 'org.projectlombok:lombok:1.18.28'
-	implementation 'org.eclipse.angus:angus-mail:2.0.1'
 	implementation 'org.seleniumhq.selenium:selenium-java:4.9.0'
 	implementation 'net.sourceforge.htmlunit:htmlunit:2.70.0'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.0.6'
 	implementation 'org.jsoup:jsoup:1.15.4'
-	implementation 'org.springframework.boot:spring-boot-starter-data-couchbase:3.0.6'
 	implementation 'org.postgresql:postgresql:42.6.0'
-	implementation 'com.google.oauth-client:google-oauth-client-jetty:1.34.1'
-	implementation 'com.google.apis:google-api-services-sheets:v4-rev20230227-2.0.0'
-	implementation 'com.google.api-client:google-api-client:2.2.0'
-	implementation 'com.google.auth:google-auth-library-oauth2-http:1.16.0'
+	implementation 'io.confluent:kafka-avro-serializer:7.5.1'
+	implementation "org.apache.avro:avro:1.11.0"
+	implementation 'com.google.code.gson:gson:2.10.1'
 
 	testCompileOnly 'org.projectlombok:lombok:1.18.28'
 	testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
 }
+
+def avroSchemasDir = "src/resources/avro"
 
 task copyJar(type: Copy) {
 	dependsOn('build')
@@ -46,6 +88,12 @@ task copyJar(type: Copy) {
 			from("build/libs/${jarFileName}")
 			into("src/main/docker/${jarFileName}")
 		}
+	}
+}
+
+task generateAvro {
+	doLast {
+		generateAvroFile('OfferData')
 	}
 }
 

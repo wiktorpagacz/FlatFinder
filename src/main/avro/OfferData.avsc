@@ -1,0 +1,39 @@
+{
+  "type": "record",
+  "name": "FlatData",
+  "namespace": "generated.avro",
+  "fields": [
+    {
+      "name": "title",
+      "type": "string"
+    },
+    {
+      "name": "source",
+      "type": "string"
+    },
+    {
+      "name": "link",
+      "type": "string"
+    },
+    {
+      "name": "comment",
+      "type": "string"
+    },
+    {
+      "name": "price",
+      "type": "int"
+    },
+    {
+      "name": "originalPrice",
+      "type": "int"
+    },
+    {
+      "name": "space",
+      "type": "double"
+    },
+    {
+      "name": "address",
+      "type": "string"
+    }
+  ]
+}

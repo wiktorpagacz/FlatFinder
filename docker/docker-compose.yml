@@ -9,6 +9,11 @@ services:
       - /dev/shm:/dev/shm
     ports:
       - "4444:4444"
+  cache:
+    image: redis
+    container_name: cache
+    ports:
+      - "6379:6379"
   app:
     container_name: springboot
     image: springboot
@@ -19,16 +24,10 @@ services:
       - firefox
       - postgresql
     environment:
-      - FF_EMAIL_NAME=${FF_EMAIL_NAME}
-      - FF_EMAIL_PASS=${FF_EMAIL_PASS}
-      - FF_EMAIL_RECIPIENTS=${FF_EMAIL_RECIPIENTS}
       - SPRING_DATASOURCE_URL=${FF_DB_URL}
       - SPRING_DATASOURCE_USERNAME=${FF_DB_LOGIN}
       - SPRING_DATASOURCE_PASSWORD=${FF_DB_PASS}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=none
-      - OLX_API=${OLX_API}
-      - MORIZON_API=${MORIZON_API}
-      - OTODOM_API=${OTODOM_API}
       - HIBERNATE_SHOW_SQL=${HIBERNATE_SHOW_SQL}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
@@ -38,6 +37,6 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=${FF_DB_LOGIN}
-      - POSTGRES_PASSWORD=${FF_DB_PASS}
-      - POSTGRES_DB=${FF_DB}
+      - POSTGRES_DB=${PG_DB}
+      - POSTGRES_USER=${DB_LOGIN}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}

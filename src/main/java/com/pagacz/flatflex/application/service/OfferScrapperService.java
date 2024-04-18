@@ -27,15 +27,59 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-public abstract class OfferService {
+public abstract class OfferScrapperService {
 
-    private final Logger log = LoggerFactory.getLogger(OfferService.class);
+    private final Logger log = LoggerFactory.getLogger(OfferScrapperService.class);
 
     @Value("${scrapper.browser}")
     String browserName;
 
     @Value("${app.environment}")
     private String env;
+
+    public List<Offer> getNewOffers() {
+        log.info("Start scrapping from %s.");
+        String pageHtml = getPageHtml();
+        log.info("Offers scrapped.");
+        return parseOffer(pageHtml);
+    }
+
+    @Async
+    public CompletableFuture<List<Offer>> getNewOffersAsync() {
+        return CompletableFuture.supplyAsync(() -> {
+            log.info("Start scrapping from {}.", getServiceName());
+            String pageHtml = getPageHtml();
+            log.info("HTML scrapped.");
+            return parseOffer(pageHtml);
+        });
+    }
+
+    public String getPageHtml() {
+        String apiUrl = getApiUrl();
+        DriverFactory factory = DriverFactoryProvider.getDriverFactory(browserName);
+        WebDriver driver = factory.getDriver(env);
+        if (Objects.nonNull(driver)) {
+            driver.get(apiUrl);
+            try {
+                acceptCookies(driver);
+                waitForOffersToAppear(driver);
+            } catch (TimeoutException e) {
+                log.error("Timeout exception occurred at cookies acceptance and wait for offers to appear stage", e);
+                return "";
+            } catch (Exception e) {
+                log.error("Unexpected exception - quit driver", e);
+            }
+            return getPageHtmlAndQuitDriver(driver);
+        }
+        return "";
+    }
+
+    protected String getPageHtmlAndQuitDriver(WebDriver driver) {
+        log.debug("Getting html source code.");
+        String source;
+        source = getPageSource(driver);
+        return source;
+    }
 
     protected abstract String getServiceName();
 
@@ -53,52 +97,9 @@ public abstract class OfferService {
 
     protected abstract String getCookiesSelector();
 
-    protected abstract String getBaseUrl();
+    protected abstract String getApiUrl();
 
-    @Async
-    public CompletableFuture<List<Offer>> getNewOffersAsync() {
-        return CompletableFuture.supplyAsync(() -> {
-            log.info("Start scrapping from {}.", getServiceName());
-            String pageHtml = getOffersCode();
-            log.info("Offers scrapped.");
-            return parseOffer(pageHtml);
-        });
-    }
-
-    private String getOffersCode() {
-        String baseUrl = getBaseUrl();
-        DriverFactory factory = DriverFactoryProvider.getDriverFactory(browserName);
-        WebDriver driver = factory.getDriver(env);
-        if (Objects.nonNull(driver)) {
-            driver.get(baseUrl);
-            try {
-                acceptCookies(driver);
-                waitForOffersToAppear(driver);
-            } catch (TimeoutException e) {
-                log.error("Timeout exception occurred at cookies acceptance and wait for offers to appear stage", e);
-                return "";
-            } catch (Exception e) {
-                log.error("Unexpected exception - quit driver", e);
-            }
-            return getPageHtmlAndQuitDriver(driver);
-        }
-        return "";
-    }
-
-    protected String getPageHtmlAndQuitDriver(WebDriver driver) {
-        log.info("Getting html source code.");
-        String source = "";
-        try {
-            source = driver.getPageSource();
-        } catch (Exception e) {
-            log.error("Error occurred at getting page source stage", e);
-        } finally {
-            log.debug("Quiting driver.");
-            driver.quit();
-            log.debug("Driver quit.");
-        }
-        return source;
-    }
+    protected abstract String getPageSelector();
 
     protected void acceptCookies(WebDriver driver) {
         String cookiesSelector = getCookiesSelector();
@@ -117,8 +118,6 @@ public abstract class OfferService {
         log.debug("Offers are presented.");
     }
 
-    protected abstract String getPageSelector();
-
     protected List<Offer> parseOffer(String pageSourceCodeHtml) {
         Elements offerElements = parseHtmlAndSelectOffers(pageSourceCodeHtml);
         return prepareOffersFromElements(offerElements);
@@ -131,6 +130,20 @@ public abstract class OfferService {
             offerList.add(offer);
         }
         return offerList;
+    }
+
+    private String getPageSource(WebDriver driver) {
+        String source = "";
+        try {
+            source = driver.getPageSource();
+        } catch (Exception e) {
+            log.error("Error occurred at getting page source stage", e);
+        } finally {
+            log.debug("Quiting driver.");
+            driver.quit();
+            log.debug("Driver quit.");
+        }
+        return source;
     }
 
     private Offer prepareOfferFromElement(Element offer) {

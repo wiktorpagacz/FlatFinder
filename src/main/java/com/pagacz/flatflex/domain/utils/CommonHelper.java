@@ -1,4 +1,4 @@
-package com.pagacz.flatflex.infrastructure.utils;
+package com.pagacz.flatflex.domain.utils;
 
 public final class CommonHelper {
 
