@@ -1,0 +1,15 @@
+version: '2'
+services:
+  cache:
+    image: redis
+    container_name: cache
+    ports:
+      - "6379:6379"
+  database:
+    image: postgres:latest
+    ports:
+      - "5433:5433"
+    environment:
+      - POSTGRES_DB=${PG_DB}
+      - POSTGRES_USER=${DB_LOGIN}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
